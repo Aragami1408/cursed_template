@@ -1,36 +1,38 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
+#include <SDL2/SDL.h>
 
-void *print_message_function( void *ptr );
+int main(int argc, char *argv[]) {
+  SDL_Window *window;
+  SDL_Renderer *renderer;
+  SDL_Surface *surface;
+  SDL_Event event;
 
-int main() {
-     pthread_t thread1, thread2;
-     char *message1 = "Thread 1";
-     char *message2 = "Thread 2";
-     int  iret1, iret2;
+  if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't initialize SDL: %s",
+                 SDL_GetError());
+    return 3;
+  }
 
-    /* Create independent threads each of which will execute function */
+  if (SDL_CreateWindowAndRenderer(320, 240, SDL_WINDOW_RESIZABLE, &window,
+                                  &renderer)) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                 "Couldn't create window and renderer: %s", SDL_GetError());
+    return 3;
+  }
 
-     iret1 = pthread_create( &thread1, NULL, print_message_function, (void*) message1);
-     iret2 = pthread_create( &thread2, NULL, print_message_function, (void*) message2);
+  while (1) {
+    SDL_PollEvent(&event);
+    if (event.type == SDL_QUIT) {
+      break;
+    }
+    SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0x00);
+    SDL_RenderClear(renderer);
+    SDL_RenderPresent(renderer);
+  }
 
-     /* Wait till threads are complete before main continues. Unless we  */
-     /* wait we run the risk of executing an exit which will terminate   */
-     /* the process and all threads before the threads have completed.   */
+  SDL_DestroyRenderer(renderer);
+  SDL_DestroyWindow(window);
 
-     pthread_join( thread1, NULL);
-     pthread_join( thread2, NULL); 
+  SDL_Quit();
 
-     printf("Thread 1 returns: %d\n",iret1);
-     printf("Thread 2 returns: %d\n",iret2);
-     return 0;
-}
-
-void *print_message_function( void *ptr )
-{
-     char *message;
-     message = (char *) ptr;
-     printf("%s \n", message);
-	 return NULL;
+  return 0;
 }
